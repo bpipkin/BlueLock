@@ -9,7 +9,48 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
 
+char** setUpArgs();
+int tearDownArgs(char**);
+
 int main(int argc, char ** argv)
+{
+  char ** args = setUpArgs();
+
+  int status = 0;
+  pid_t pid = fork();
+
+  if (pid == 0) // child process
+    {
+      printf("in child");
+      execvp(*args,args);
+    }// end child process
+  else
+    {
+      printf("in parent\n");
+      printf("child id = %d\n",pid);
+      //while(wait(&status) != pid);
+      sleep(100);
+
+      int killNo = kill(pid,0);
+      int errVal = errno;
+      if (killNo == -1 && errVal == EPERM)
+	{
+	  printf("child is alive\n");
+	}// wait
+      else
+	{
+	  printf("child failed\n");
+	}
+      waitpid(pid,NULL,0);
+      printf("after waitpid()\n");
+    }// do something else
+
+  printf("done\n");
+  printf("tear down args rc:%d\n",tearDownArgs(args));
+  return 0;
+}// end main()
+
+char ** setUpArgs()
 {
   char * sudo = (char*)calloc(5,sizeof(char));
   memcpy(sudo,"sudo",4);
@@ -37,36 +78,14 @@ int main(int argc, char ** argv)
   *(args + 4) = bluetooth;
   *(args + 5) = one;
 
-  int status = 0;
-  pid_t pid = fork();
+  return args;
+}// end setUpArgs()
 
-  if (pid == 0) // child process
-    {
-      printf("in child");
-      execvp(*args,args);
-    }// end child process
-  else
-    {
-      printf("in parent\n");
-      printf("child id = %d\n",pid);
-      //while(wait(&status) != pid);
-      sleep(6);
-
-      int killNo = kill(pid,0);
-      int errVal = errno;
-      if (killNo == -1 && errVal == EPERM)
-	{
-	  printf("child is alive\n");
-	}// wait
-      else
-	{
-	  printf("child failed\n");
-	}
-      waitpid(pid,NULL,0);
-      printf("after waitpid()\n");
-    }// do something else
-  
-  printf("done\n");
-  return 0;
-}// end main()
-
+int tearDownArgs(char ** args)
+{
+  int i = 0;
+  while (i < 6)
+    free(*(args + i++));
+  free(args);
+  return i;
+}// end tearDownArgs()
