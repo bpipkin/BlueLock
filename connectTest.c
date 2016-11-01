@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
@@ -8,56 +11,62 @@
 
 int main(int argc, char ** argv)
 {
-  int dev_id, sock;
-  char addr[18] = "00:CD:FE:CE:BC:4D";
-  bdaddr_t *ba = (bdaddr_t *)malloc(sizeof(bdaddr_t *));
-  char * name = (char *)calloc(25,1);
+  char * sudo = (char*)calloc(5,sizeof(char));
+  memcpy(sudo,"sudo",4);
 
-  uint16_t test = 0;
-  struct hci_dev_info di;
+  char * rfcomm = (char*)calloc(7,sizeof(char));
+  memcpy(rfcomm,"rfcomm",6);
+
+  char * connect = (char*)calloc(8,sizeof(char));
+  memcpy(connect,"connect",7);
+
+  char * zero = (char*)calloc(2,sizeof(char));
+  memcpy(zero,"0",1);
+
+  char * bluetooth = (char*)calloc(18,sizeof(char));
+  memcpy(bluetooth,"00:CD:FE:CE:BC:4D",17);
+
+  char * one = (char*)calloc(2,sizeof(char));
+  memcpy(one,"1",1);
+
+  char ** args = (char**)calloc(6,sizeof(char*));
+  *args = sudo;
+  *(args + 1) = rfcomm;
+  *(args + 2) = connect;
+  *(args + 3) = zero;
+  *(args + 4) = bluetooth;
+  *(args + 5) = one;
+
+  int status = 0;
+  pid_t pid = fork();
+
+  if (pid == 0) // child process
+    {
+      printf("in child");
+      execvp(*args,args);
+    }// end child process
+  else
+    {
+      printf("in parent\n");
+      printf("child id = %d\n",pid);
+      //while(wait(&status) != pid);
+      sleep(6);
+
+      int killNo = kill(pid,0);
+      int errVal = errno;
+      if (killNo == -1 && errVal == EPERM)
+	{
+	  printf("child is alive\n");
+	}// wait
+      else
+	{
+	  printf("child failed\n");
+	}
+      waitpid(pid,NULL,0);
+      printf("after waitpid()\n");
+    }// do something else
   
-  if (0 > str2ba(addr,ba))
-    {
-      printf("str2ba() error\n");
-      exit(1);
-    }// end string 2 ba error
-
-
-  dev_id = hci_get_route(NULL);
-  sock = hci_open_dev( dev_id );
-  if (dev_id < 0 || sock < 0) {
-    perror("opening socket");
-    exit(1);
-  }
-
-  if (0 > hci_devinfo(dev_id,&di))
-    {
-      printf("can't get device info\n");
-      exit(1);
-    }// end get device info
-
-  
-  if (hci_read_remote_name(sock, ba, 25,name, 0) < 0)
-    {
-      printf("unable to read name\n");
-      exit(1);
-    }
-  printf("%s\n",name);
-
-  if (0 > hci_create_connection(sock, ba, htobs(di.pkt_type & ACL_PTYPE_MASK),0,0x01,&test,25000))
-    {
-      perror("hci_create_connection error\n");
-      exit(1);
-    }//end if create connection
-
-  if (0 > hci_disconnect(sock,test,0,0))
-    {
-      printf("hci_disconnect error\n");
-      exit(1);
-    }//end hci_disconnect
-  
-  close( sock );
-  free(ba);
-  free(name);
+  printf("done\n");
   return 0;
 }// end main()
+
