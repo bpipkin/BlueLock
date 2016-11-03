@@ -1,7 +1,7 @@
 all:run
 
 compile:connectTest.c
-	gcc -o connectTest connectTest.c -lbluetooth
+	gcc -o connectTest connectTest.c #-lbluetooth
 
 run:compile
 	./connectTest

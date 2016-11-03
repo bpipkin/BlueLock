@@ -5,9 +5,9 @@
 #include <signal.h>
 #include <errno.h>
 #include <sys/socket.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
+//#include <bluetooth/bluetooth.h>
+//#include <bluetooth/hci.h>
+//#include <bluetooth/hci_lib.h>
 
 char** setUpArgs();
 int tearDownArgs(char**);
