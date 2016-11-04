@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <string.h>
 //#include <bluetooth/bluetooth.h>
 //#include <bluetooth/hci.h>
 //#include <bluetooth/hci_lib.h>
@@ -29,10 +30,11 @@ int main(int argc, char ** argv)
       printf("in parent\n");
       printf("child id = %d\n",pid);
       //while(wait(&status) != pid);
-      sleep(100);
+      sleep(6);
 
       int killNo = kill(pid,0);
       int errVal = errno;
+      printf("killNo = %d\nerrVal = %d\n",killNo,errVal);
       if (killNo == -1 && errVal == EPERM)
 	{
 	  printf("child is alive\n");
@@ -40,6 +42,14 @@ int main(int argc, char ** argv)
       else
 	{
 	  printf("child failed\n");
+	  if (errVal == EINVAL)
+	    printf("errVal = EINVAL\n");
+	  else if (errVal == ESRCH)
+	    printf("errVal = ESRCH\n");
+	  else if (errVal == EPERM)
+	    printf("errVal = EPERM\n");
+	  else
+	    printf("errVal = UNKNOWN\n");
 	}
       waitpid(pid,NULL,0);
       printf("after waitpid()\n");
