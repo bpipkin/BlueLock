@@ -38,6 +38,7 @@ int main(int argc, char ** argv)
       if (killNo == -1 && errVal == EPERM)
 	{
 	  printf("child is alive\n");
+	  //TODO: UNLOCK DOOR
 	}// wait
       else
 	{
